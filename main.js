@@ -1,108 +1,171 @@
+// main.js – generic logic for the Vault expense‑tracker UI
+// -----------------------------------------------------------
+// Expected DOM elements (must exist in the HTML):
+//   - #openTransactionModal (button that opens the dialog)
+//   - #closeTransactionModal (button that closes the dialog)
+//   - #transactionModal (the <dialog> element)
+//   - #transactionForm (the <form> inside the dialog)
+//   - #transactionList (the <ul> where recent transactions are rendered)
+//   - #spendingChart (the <canvas> for Chart.js)
+
+// -----------------------------------------------------------
+
+// 1️⃣ Modal open / close handling
+const openBtn   = document.getElementById('openTransactionModal');
+const closeBtn  = document.getElementById('closeTransactionModal');
+const modal     = document.getElementById('transactionModal');
+
+if (openBtn && closeBtn && modal) {
+  openBtn.addEventListener('click', () => modal.showModal());
+  closeBtn.addEventListener('click', () => modal.close());
+
+  // Close when clicking outside the dialog (nice UX)
+  modal.addEventListener('click', e => {
+    if (e.target === modal) modal.close();
+  });
+}
+
+// 2️⃣ Local‑storage helpers
+const STORAGE_KEY = 'vaultTransactions';
+
+function loadTransactions() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveTransactions(txs) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(txs));
+}
+
+// 3️⃣ Rendering a single transaction <li>
+function createListItem(tx) {
+  const li = document.createElement('li');
+  li.className = 'transaction-item';
+
+  const iconMap = {
+    groceries:   'ph-shopping-cart',
+    rent:        'ph-home',
+    education:   'ph-books',
+    subscriptions: 'ph-credit-card',
+    default:     'ph-receipt'
+  };
+  const icon = iconMap[tx.category] || iconMap.default;
+  const amountSign = tx.type === 'income' ? '+' : '-';
+  const amountClass = tx.type === 'income' ? 'positive' : 'negative';
+  const amountText = `${amountSign}$${Number(tx.amount).toFixed(2)}`;
+
+  li.innerHTML = `
+    <div class="tx-icon ${tx.category}"><i class="ph ${icon}"></i></div>
+    <div class="tx-details">
+      <span class="tx-title">${tx.title || 'Untitled'}</span>
+      <span class="tx-category">${capitalize(tx.category)}${tx.tags ? ' • <span class="tag">' + tx.tags + '</span>' : ''}</span>
+    </div>
+    <div class="tx-amount ${amountClass}">${amountText}</div>
+  `;
+  return li;
+}
+
+function capitalize(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// 4️⃣ Render all stored transactions into the list (newest on top)
+function renderAllTransactions() {
+  const list = document.getElementById('transactionList');
+  if (!list) return;
+  list.innerHTML = '';
+  const txs = loadTransactions().slice().reverse();
+  txs.forEach(tx => list.appendChild(createListItem(tx)));
+}
+
+// 5️⃣ Form submission – create a transaction object, persist, re‑render, update chart
+const form = document.getElementById('transactionForm');
+if (form) {
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const tx = {
+      id: Date.now(),
+      type: document.querySelector('input[name="txType"]:checked').value,
+      amount: parseFloat(document.getElementById('txAmount').value),
+      category: document.getElementById('txCategory').value,
+      date: document.getElementById('txDate').value,
+      title: document.getElementById('txDescription').value.trim(),
+      tags: document.getElementById('txTags').value.trim()
+    };
+
+    // Basic validation
+    if (isNaN(tx.amount) || tx.amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    const all = loadTransactions();
+    all.push(tx);
+    saveTransactions(all);
+
+    // Update UI instantly
+    const list = document.getElementById('transactionList');
+    if (list) list.prepend(createListItem(tx));
+    updateChart();
+
+    form.reset();
+    modal.close();
+  });
+}
+
+// 6️⃣ Chart.js – show monthly expense totals (expenses only)
+let spendingChart = null;
+function aggregateByMonth(txs) {
+  const map = {};
+  txs.forEach(t => {
+    if (t.type !== 'expense') return;
+    const month = t.date.slice(0,7); // YYYY‑MM
+    const amt = Number(t.amount);
+    map[month] = (map[month] || 0) + amt;
+  });
+  return map;
+}
+
+function updateChart() {
+  const ctx = document.getElementById('spendingChart')?.getContext('2d');
+  if (!ctx) return;
+
+  const agg = aggregateByMonth(loadTransactions());
+  const labels = Object.keys(agg).sort();
+  const data = labels.map(m => agg[m]);
+
+  const chartData = {
+    labels,
+    datasets: [{
+      label: 'Monthly Expenses (₹)',
+      data,
+      borderColor: '#d4a373',
+      backgroundColor: 'rgba(212,163,115,0.2)',
+      fill: true,
+      tension: 0.3
+    }]
+  };
+
+  if (spendingChart) {
+    spendingChart.data = chartData;
+    spendingChart.update();
+  } else {
+    spendingChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+}
+
+// 7️⃣ Initial load – render list and chart
 document.addEventListener('DOMContentLoaded', () => {
-    // Modal Management
-    const modal = document.getElementById('transactionModal');
-    const openBtn = document.getElementById('openTransactionModal');
-    const closeBtn = document.getElementById('closeTransactionModal');
-
-    openBtn.addEventListener('click', () => modal.showModal());
-    closeBtn.addEventListener('click', () => modal.close());
-
-    // Close modal when clicking outside the glass panel
-    modal.addEventListener('click', (e) => {
-        const dialogDimensions = modal.getBoundingClientRect()
-        if (
-            e.clientX < dialogDimensions.left ||
-            e.clientX > dialogDimensions.right ||
-            e.clientY < dialogDimensions.top ||
-            e.clientY > dialogDimensions.bottom
-        ) {
-            modal.close();
-        }
-    });
-
-    // Form Submission Logging
-    const form = document.getElementById('transactionForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const formData = {
-            type: document.querySelector('input[name="txType"]:checked').value,
-            amount: parseFloat(document.getElementById('txAmount').value),
-            category: document.getElementById('txCategory').value,
-            date: document.getElementById('txDate').value,
-            description: document.getElementById('txDescription').value,
-            tags: document.getElementById('txTags').value.split(',').map(t => t.trim()).filter(t => t)
-        };
-
-        console.log('Transaction ready for PocketBase upload:', formData);
-        
-        // Reset and close
-        form.reset();
-        modal.close();
-    });
-
-    // Premium Chart.js Configuration
-    const ctx = document.getElementById('spendingChart').getContext('2d');
-    
-    // Create a subtle gradient for the line fill
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(212, 163, 115, 0.3)'); // Bronze fade top
-    gradient.addColorStop(1, 'rgba(212, 163, 115, 0.0)'); // Transparent bottom
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Spending',
-                data: [120, 190, 140, 280, 220, 310, 250],
-                borderColor: '#d4a373', // Bronze line
-                backgroundColor: gradient,
-                borderWidth: 2,
-                pointBackgroundColor: '#09090b',
-                pointBorderColor: '#d4a373',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                tension: 0.4, // Smooth elegant curves
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(24, 24, 27, 0.9)',
-                    titleColor: '#a1a1aa',
-                    bodyColor: '#f4f4f5',
-                    borderColor: 'rgba(255,255,255,0.1)',
-                    borderWidth: 1,
-                    padding: 12,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return '$' + context.parsed.y;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: { 
-                    beginAtZero: true, 
-                    grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
-                    ticks: { color: '#a1a1aa', font: { family: 'Inter' } }
-                },
-                x: { 
-                    grid: { display: false, drawBorder: false },
-                    ticks: { color: '#a1a1aa', font: { family: 'Inter' } }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            },
-        }
-    });
+  renderAllTransactions();
+  updateChart();
 });
