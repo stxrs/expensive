@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault | Private Expense Tracker</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Local Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ambient Background Elements -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="ph ph-vault"></i>
+                <span>Vault</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#dashboard" class="active"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="#income"><i class="ph ph-wallet"></i> Income</a>
+                <a href="#transactions"><i class="ph ph-currency-dollar"></i> Transactions</a>
+                <a href="#expenses"><i class="ph ph-download-simple"></i> Expenses</a>
+                <a href="#budgets"><i class="ph ph-chart-pie-slice"></i> Budgets</a>
+                <a href="#settings"><i class="ph ph-gear"></i> Settings</a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div class="user-info">
+                    <span class="name">User Profile</span>
+                    <span class="role">@avatar.user</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">
+                    <h1>Dashboard</h1>
+                    <p class="subtitle">Welcome back, here is your financial overview.</p>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-secondary glass-panel"><i class="ph ph-export"></i> Export</button>
+                    <button class="btn btn-primary" id="openTransactionModal">
+                        <i class="ph ph-plus"></i> New Transaction
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Summary Cards -->
+            <section class="summary-grid">
+                <div class="card glass-panel stat-card bronze-text">
+                    <div class="stat-header">
+                        <span>Total Balance</span>
+                        <i class="ph ph-wallet"></i>
+                    </div>
+                    <h3>$4,250.00</h3>
+                    <div class="stat-footer">Positive Balance</div>
+                </div>
+                <div class="card glass-panel stat-card">
+                    <div class="stat-header">
+                        <span>Monthly Income</span>
+                        <i class="ph ph-trend-up"></i>
+                    </div>
+                    <h3>$5,500.00</h3>
+                    <div class="stat-footer">From 3 sources</div>
+                </div>
+                <div class="card glass-panel stat-card">
+                    <div class="stat-header">
+                        <span>Monthly Expenses</span>
+                        <i class="ph ph-trend-down"></i>
+                    </div>
+                    <h3>$1,250.00</h3>
+                    <div class="stat-footer">
+                        <div style="width: 100%; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; margin-top: 8px;">
+                            <div style="width: 35%; background: var(--accent-bronze); height: 100%; border-radius: 2px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts & Recent Transactions -->
+            <section class="content-grid">
+                <div class="card glass-panel chart-container">
+                    <h3>Spending Trend</h3>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="spendingChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card glass-panel recent-transactions">
+                    <div class="card-header">
+                        <h3>Recent Activity</h3>
+                        <a href="#transactions">View All</a>
+                    </div>
+                    <ul class="transaction-list">
+                        <li class="transaction-item">
+                            <div class="tx-icon"><i class="ph ph-shopping-cart"></i></div>
+                            <div class="tx-details">
+                                <span class="tx-title">Shopping</span>
+                                <span class="tx-category">Groceries</span>
+                            </div>
+                            <div class="tx-amount negative">-$145.20</div>
+                        </li>
+                        <li class="transaction-item">
+                            <div class="tx-icon"><i class="ph ph-book-open"></i></div>
+                            <div class="tx-details">
+                                <span class="tx-title">Book Store</span>
+                                <span class="tx-category">Education • #semester1</span>
+                            </div>
+                            <div class="tx-amount negative">-$85.00</div>
+                        </li>
+                        <li class="transaction-item">
+                            <div class="tx-icon"><i class="ph ph-music-notes"></i></div>
+                            <div class="tx-details">
+                                <span class="tx-title">Online Concert</span>
+                                <span class="tx-category">Entertainment</span>
+                            </div>
+                            <div class="tx-amount negative">-$120.00</div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <dialog class="modal" id="transactionModal">
+        <div class="modal-content glass-panel">
+            <header class="modal-header">
+                <h2>New Record</h2>
+                <button class="close-btn" id="closeTransactionModal"><i class="ph ph-x"></i></button>
+            </header>
+            <form id="transactionForm">
+                <div class="form-row type-toggle">
+                    <label class="radio-label">
+                        <input type="radio" name="txType" value="expense" checked>
+                        <span>Expense</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="txType" value="income">
+                        <span>Income</span>
+                    </label>
+                </div>
+                
+                <div class="form-group amount-group">
+                    <span class="currency-symbol">$</span>
+                    <input type="number" id="txAmount" placeholder="0.00" step="0.01" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="txCategory">Category</label>
+                        <select id="txCategory" required>
+                            <option value="groceries">Groceries</option>
+                            <option value="rent">Rent</option>
+                            <option value="education">Education</option>
+                            <option value="subscriptions">Subscriptions</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="txDate">Date</label>
+                        <input type="date" id="txDate" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="txDescription">Description</label>
+                    <input type="text" id="txDescription" placeholder="What was this for?" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="txTags">Tags (Comma separated)</label>
+                    <input type="text" id="txTags" placeholder="e.g., #split-bill, #household">
+                </div>
+
+                <button type="submit" class="btn btn-primary full-width">Save to Vault</button>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Local Scripts -->
+    <script src="main.js"></script>
+</body>
+</html>
