@@ -10,7 +10,6 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Local Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,7 +18,31 @@
     <div class="ambient-glow glow-2"></div>
     <div class="ambient-glow glow-3"></div>
 
-    <div class="app-container">
+    <!-- AUTHENTICATION VIEW -->
+    <div id="auth-view" class="auth-container">
+        <div class="glass-panel auth-box">
+            <div class="brand auth-brand">
+                <i class="ph ph-vault"></i>
+                <span>Vault</span>
+            </div>
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Enter your credentials to access your secure local vault.</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@vault.local">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary full-width">Unlock Vault</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP VIEW (Hidden by default) -->
+    <div id="app-view" class="app-container hidden">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="brand">
@@ -27,19 +50,16 @@
                 <span>Vault</span>
             </div>
             <nav class="nav-links">
-                <a href="#dashboard" class="active"><i class="ph ph-squares-four"></i> Dashboard</a>
-                <a href="#income"><i class="ph ph-wallet"></i> Income</a>
-                <a href="#transactions"><i class="ph ph-currency-dollar"></i> Transactions</a>
-                <a href="#expenses"><i class="ph ph-download-simple"></i> Expenses</a>
-                <a href="#budgets"><i class="ph ph-chart-pie-slice"></i> Budgets</a>
-                <a href="#settings"><i class="ph ph-gear"></i> Settings</a>
+                <a href="#" data-target="view-dashboard" class="nav-item active"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="#" data-target="view-transactions" class="nav-item"><i class="ph ph-list-dashes"></i> Transactions</a>
             </nav>
             <div class="user-profile">
-                <div class="avatar">A</div>
+                <div class="avatar" id="userAvatar">U</div>
                 <div class="user-info">
-                    <span class="name">User Profile</span>
-                    <span class="role">@avatar.user</span>
+                    <span class="name" id="userName">User</span>
+                    <span class="role">Local Admin</span>
                 </div>
+                <button id="logoutBtn" class="btn-icon" title="Lock Vault"><i class="ph ph-lock-key"></i></button>
             </div>
         </aside>
 
@@ -47,88 +67,67 @@
         <main class="main-content">
             <header class="topbar">
                 <div class="page-title">
-                    <h1>Dashboard</h1>
-                    <p class="subtitle">Welcome back, here is your financial overview.</p>
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p class="subtitle" id="pageSubtitle">Your financial overview.</p>
                 </div>
                 <div class="actions">
-                    <button class="btn btn-secondary glass-panel"><i class="ph ph-export"></i> Export</button>
+                    <button class="btn btn-secondary glass-panel" id="exportBtn"><i class="ph ph-export"></i> Export CSV</button>
                     <button class="btn btn-primary" id="openTransactionModal">
-                        <i class="ph ph-plus"></i> New Transaction
+                        <i class="ph ph-plus"></i> New Record
                     </button>
                 </div>
             </header>
 
-            <!-- Dashboard Summary Cards -->
-            <section class="summary-grid">
-                <div class="card glass-panel stat-card bronze-text">
-                    <div class="stat-header">
-                        <span>Total Balance</span>
-                        <i class="ph ph-wallet"></i>
+            <!-- VIEW: DASHBOARD -->
+            <section id="view-dashboard" class="page-view active">
+                <!-- Summary Cards -->
+                <section class="summary-grid">
+                    <div class="card glass-panel stat-card bronze-text">
+                        <div class="stat-header"><span>Total Balance</span><i class="ph ph-wallet"></i></div>
+                        <h3 id="statBalance">$0.00</h3>
+                        <div class="stat-footer" id="balanceStatus">Neutral Balance</div>
                     </div>
-                    <h3>$4,250.00</h3>
-                    <div class="stat-footer">Positive Balance</div>
-                </div>
-                <div class="card glass-panel stat-card">
-                    <div class="stat-header">
-                        <span>Monthly Income</span>
-                        <i class="ph ph-trend-up"></i>
+                    <div class="card glass-panel stat-card">
+                        <div class="stat-header"><span>Total Income</span><i class="ph ph-trend-up"></i></div>
+                        <h3 id="statIncome">$0.00</h3>
+                        <div class="stat-footer">All time</div>
                     </div>
-                    <h3>$5,500.00</h3>
-                    <div class="stat-footer">From 3 sources</div>
-                </div>
-                <div class="card glass-panel stat-card">
-                    <div class="stat-header">
-                        <span>Monthly Expenses</span>
-                        <i class="ph ph-trend-down"></i>
+                    <div class="card glass-panel stat-card">
+                        <div class="stat-header"><span>Total Expenses</span><i class="ph ph-trend-down"></i></div>
+                        <h3 id="statExpense">$0.00</h3>
+                        <div class="stat-footer">All time</div>
                     </div>
-                    <h3>$1,250.00</h3>
-                    <div class="stat-footer">
-                        <div style="width: 100%; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; margin-top: 8px;">
-                            <div style="width: 35%; background: var(--accent-bronze); height: 100%; border-radius: 2px;"></div>
+                </section>
+
+                <!-- Charts & Recent -->
+                <section class="content-grid">
+                    <div class="card glass-panel chart-container">
+                        <h3>Spending Trend</h3>
+                        <div style="position: relative; height: 250px; width: 100%;">
+                            <canvas id="spendingChart"></canvas>
                         </div>
                     </div>
-                </div>
+                    
+                    <div class="card glass-panel recent-transactions">
+                        <div class="card-header">
+                            <h3>Recent Activity</h3>
+                            <a href="#" id="viewAllLink">View All</a>
+                        </div>
+                        <ul class="transaction-list" id="recentList">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+                </section>
             </section>
 
-            <!-- Charts & Recent Transactions -->
-            <section class="content-grid">
-                <div class="card glass-panel chart-container">
-                    <h3>Spending Trend</h3>
-                    <div style="position: relative; height: 250px; width: 100%;">
-                        <canvas id="spendingChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="card glass-panel recent-transactions">
+            <!-- VIEW: TRANSACTIONS -->
+            <section id="view-transactions" class="page-view hidden">
+                <div class="card glass-panel full-height">
                     <div class="card-header">
-                        <h3>Recent Activity</h3>
-                        <a href="#transactions">View All</a>
+                        <h3>All Transactions</h3>
                     </div>
-                    <ul class="transaction-list" id="transactionList">
-                        <li class="transaction-item">
-                            <div class="tx-icon"><i class="ph ph-shopping-cart"></i></div>
-                            <div class="tx-details">
-                                <span class="tx-title">Shopping</span>
-                                <span class="tx-category">Groceries</span>
-                            </div>
-                            <div class="tx-amount negative">-$145.20</div>
-                        </li>
-                        <li class="transaction-item">
-                            <div class="tx-icon"><i class="ph ph-book-open"></i></div>
-                            <div class="tx-details">
-                                <span class="tx-title">Book Store</span>
-                                <span class="tx-category">Education • #semester1</span>
-                            </div>
-                            <div class="tx-amount negative">-$85.00</div>
-                        </li>
-                        <li class="transaction-item">
-                            <div class="tx-icon"><i class="ph ph-music-notes"></i></div>
-                            <div class="tx-details">
-                                <span class="tx-title">Online Concert</span>
-                                <span class="tx-category">Entertainment</span>
-                            </div>
-                            <div class="tx-amount negative">-$120.00</div>
-                        </li>
+                    <ul class="transaction-list" id="fullTransactionList">
+                        <!-- Populated dynamically -->
                     </ul>
                 </div>
             </section>
@@ -156,17 +155,19 @@
                 
                 <div class="form-group amount-group">
                     <span class="currency-symbol">$</span>
-                    <input type="number" id="txAmount" placeholder="0.00" step="0.01" required>
+                    <input type="number" id="txAmount" placeholder="0.00" step="0.01" min="0.01" required>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="txCategory">Category</label>
                         <select id="txCategory" required>
-                            <option value="groceries">Groceries</option>
-                            <option value="rent">Rent</option>
-                            <option value="education">Education</option>
-                            <option value="subscriptions">Subscriptions</option>
+                            <option value="Groceries">Groceries</option>
+                            <option value="Rent">Rent</option>
+                            <option value="Education">Education</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -180,17 +181,11 @@
                     <input type="text" id="txDescription" placeholder="What was this for?" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="txTags">Tags (Comma separated)</label>
-                    <input type="text" id="txTags" placeholder="e.g., #split-bill, #household">
-                </div>
-
                 <button type="submit" class="btn btn-primary full-width">Save to Vault</button>
             </form>
         </div>
     </dialog>
 
-    <!-- Local Scripts -->
     <script src="main.js"></script>
 </body>
 </html>
