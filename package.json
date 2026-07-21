@@ -1,0 +1,26 @@
+{
+  "name": "expensive",
+  "version": "1.0.0",
+  "description": "simple expenses tracker (targeted for students)",
+  "main": "main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist",
+    "pb:start": "pocketbase serve --http=0.0.0.0:8090",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stxrs/expensive.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/stxrs/expensive/issues"
+  },
+  "homepage": "https://github.com/stxrs/expensive#readme"
+}
