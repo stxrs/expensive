@@ -1,64 +1,60 @@
-/* Simple, clean styling for the Vault expense‑tracker */
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 2rem;
-  background: #f9f9f9;
-  color: #333;
+/* Basic reset and theming */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-
-h1, h2, h3 {
-  margin-bottom: 0.5rem;
+html, body {
+  height: 100%;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
-
-button, input, select {
-  font-family: inherit;
-  font-size: 1rem;
+[data-theme="light"] {
+  --bg: #f8f9fa;
+  --text: #212529;
+  --primary: #0d6efd;
+  --card-bg: #fff;
 }
-
-/* Layout */
-.app-container { display: flex; min-height: 100vh; }
-.sidebar { width: 220px; background: #2c3e50; color: #ecf0f1; padding: 1rem; }
-.main-content { flex: 1; padding: 1rem; }
-
-/* Sidebar links */
-.nav-links a { display: block; color: #ecf0f1; padding: .4rem 0; text-decoration: none; }
-.nav-links a.active { font-weight: bold; }
-
-/* Topbar */
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.actions button { margin-left: .5rem; }
-
-/* Cards */
-.summary-grid, .content-grid { display: grid; gap: 1rem; }
-.summary-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-.content-grid  { grid-template-columns: 2fr 1fr; }
-.card { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.stat-card .stat-header { display: flex; justify-content: space-between; align-items: center; }
-.badge.positive { color: #27ae60; }
-.badge.negative { color: #c0392b; }
-
-/* Transaction list */
-.transaction-list { list-style: none; padding: 0; margin: 0; }
-.transaction-item { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid #eee; }
-.tx-icon { width: 24px; }
-.tx-amount.positive { color: #27ae60; }
-.tx-amount.negative { color: #c0392b; }
-
-/* Modal (basic) */
-.modal { border: none; }
-.modal-content { background: #fff; padding: 1rem; border-radius: 8px; max-width: 500px; margin: auto; }
-.close-btn { background: none; border: none; font-size: 1.2rem; }
-
-/* Form styling */
-.form-group { margin-bottom: .5rem; }
-.amount-group { display: flex; align-items: center; }
-.currency-symbol { margin-right: .3rem; }
-.full-width { width: 100%; }
-
-/* Responsive */
-@media (max-width: 800px) {
-  .app-container { flex-direction: column; }
-  .sidebar { width: 100%; }
-  .content-grid { grid-template-columns: 1fr; }
+[data-theme="dark"] {
+  --bg: #212529;
+  --text: #f8f9fa;
+  --primary: #0d6efd;
+  --card-bg: #2c2f33;
 }
+header {
+  background: var(--primary);
+  color: #fff;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+nav {
+  background: var(--card-bg);
+  padding: 0.5rem 1rem;
+  display: flex;
+  gap: 1rem;
+}
+nav a {
+  color: var(--primary);
+  text-decoration: none;
+}
+nav a.active {
+  font-weight: bold;
+  text-decoration: underline;
+}
+main {
+  padding: 1rem;
+}
+.hidden { display: none; }
+.btn { cursor: pointer; background: var(--primary); color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; }
+section { margin-bottom: 2rem; }
+form { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+input, select, button { padding: 0.4rem; border: 1px solid #ccc; border-radius: 4px; }
+button { background: var(--primary); color: #fff; border: none; }
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
