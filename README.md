@@ -1,5 +1,7 @@
 # Expensive — Private Expense Tracker
 
+https://stxrs.github.io/expensive/
+
 A self-hosted personal finance app: static frontend (HTML/CSS/vanilla JS) on
 GitHub Pages, talking to your own PocketBase server over HTTPS.
 
