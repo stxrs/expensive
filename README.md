@@ -1,7 +1,5 @@
 # Expensive — Private Expense Tracker
 
-https://stxrs.github.io/expensive/
-
 A self-hosted personal finance app: static frontend (HTML/CSS/vanilla JS) on
 GitHub Pages, talking to your own PocketBase server over HTTPS.
 
@@ -179,20 +177,3 @@ overall + category budget → cross the warning/over-budget thresholds → chang
 the month-start day → add/pause a recurring transaction → upload/remove a
 receipt → export CSV and JSON → change currency → toggle theme → resize to
 320/375/768/1024px → tab through a form with keyboard only → reload mid-session.
-
-## Deploying to GitHub Pages
-
-1. Create a new repository on GitHub and push this project to the `main` branch.
-2. In `js/config.js` set `POCKETBASE_URL` to the public URL of your PocketBase
-  instance (e.g. `https://expensive.example.com`) and set `USE_LOCAL: false`.
-3. Option A — quick manual: In the repository Settings → Pages, set the source
-  to the `main` branch and root folder. GitHub Pages will serve `index.html`.
-4. Option B — automatic: this repo includes a GitHub Actions workflow that will
-  publish the repository contents to Pages on every push to `main` (see
-  `.github/workflows/pages.yml`).
-
-Notes:
-- If you prefer demo mode (no PocketBase), keep `USE_LOCAL: true` — the app
-  then stores data in the browser's `localStorage` for testing.
-- Add a `CNAME` file with your custom domain into the repo root if you use one.
-- The `.nojekyll` file is included so files are served verbatim (no Jekyll).
