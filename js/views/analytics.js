@@ -61,7 +61,7 @@ export function renderAnalytics(container) {
       <div class="card">
         <div class="section-title mt-0"><h2 style="font-size:15px;">Highest spending days</h2></div>
         <div class="ledger">${topDays.length ? topDays.map(([date, amt]) => `
-          <div class="ledger-row"><div class="ledger-icon" style="background:var(--coral-soft);color:var(--coral);">◆</div>
+          <div class="ledger-row"><div class="ledger-icon" style="background:var(--brand-soft);color:var(--brand);">◆</div>
           <div class="ledger-main"><div class="ledger-desc">${formatDateShort(date)}</div></div><div></div>
           <div class="ledger-amount amount-expense">${formatMoney(amt, settings.currency)}</div></div>`).join("") : `<div class="empty-state"><p class="small">No data yet.</p></div>`}
         </div>
@@ -69,7 +69,7 @@ export function renderAnalytics(container) {
       <div class="card">
         <div class="section-title mt-0"><h2 style="font-size:15px;">Largest transactions</h2></div>
         <div class="ledger">${largestTx.length ? largestTx.map((t) => `
-          <div class="ledger-row"><div class="ledger-icon" style="background:var(--teal-soft);color:var(--teal);">${t.type === "expense" ? "−" : "+"}</div>
+          <div class="ledger-row"><div class="ledger-icon" style="background:${t.type === "expense" ? "var(--brand-soft)" : "var(--positive-soft)"};color:${t.type === "expense" ? "var(--brand)" : "var(--positive)"};">${t.type === "expense" ? "−" : "+"}</div>
           <div class="ledger-main"><div class="ledger-desc">${escapeHtml(t.description)}</div><div class="ledger-meta">${formatDateShort(t.date)}</div></div><div></div>
           <div class="ledger-amount ${t.type === "expense" ? "amount-expense" : "amount-income"}">${formatMoney(t.amount, settings.currency)}</div></div>`).join("") : `<div class="empty-state"><p class="small">No data yet.</p></div>`}
         </div>
@@ -86,7 +86,7 @@ export function renderAnalytics(container) {
     const ctx = container.querySelector("#an-cat-chart");
     charts.cat = new Chart(ctx, {
       type: "bar",
-      data: { labels: catTotals.map((c) => c.category), datasets: [{ data: catTotals.map((c) => c.total / 100), backgroundColor: "#0F6B5C", borderRadius: 6 }] },
+      data: { labels: catTotals.map((c) => c.category), datasets: [{ data: catTotals.map((c) => c.total / 100), backgroundColor: "#93032E", borderRadius: 6 }] },
       options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } },
     });
   }

@@ -1,5 +1,5 @@
 import { getState, setState } from "../store.js";
-import { dataService, isDemoMode } from "../services/index.js";
+import { dataService } from "../services/index.js";
 import { reloadPaymentMethods, reloadRecurring } from "../dataLayer.js";
 import { openModal, confirmDialog, toast, escapeHtml, uid, CURRENCIES, toMinorUnits, fromMinorUnits, todayStr, applyTheme } from "../utils.js";
 
@@ -55,7 +55,7 @@ export function renderSettings(container) {
 
     <div class="card">
       <h3 style="font-size:15px;margin-bottom:6px;">Account</h3>
-      <p class="muted small">Signed in as ${escapeHtml(user.email)} ${isDemoMode ? "(demo mode)" : ""}</p>
+      <p class="muted small">Signed in as ${escapeHtml(user.email)}</p>
     </div>
   `;
 
@@ -101,7 +101,7 @@ async function saveSettings(patch, container) {
 
 function recurringRow(r) {
   return `<div class="ledger-row" style="cursor:default;">
-    <div class="ledger-icon" style="background:var(--teal-soft);color:var(--teal);">${r.frequency[0].toUpperCase()}</div>
+    <div class="ledger-icon" style="background:var(--brand-soft);color:var(--brand);">${r.frequency[0].toUpperCase()}</div>
     <div class="ledger-main"><div class="ledger-desc">${escapeHtml(r.description)} ${r.paused ? '<span class="tag">Paused</span>' : ""}</div>
       <div class="ledger-meta">${r.frequency} · ${escapeHtml(r.category)} · from ${r.startDate}</div></div>
     <div style="display:flex;gap:6px;">

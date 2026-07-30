@@ -4,7 +4,7 @@ import { reloadCategories, reloadTransactions } from "../dataLayer.js";
 import { openModal, confirmDialog, toast, escapeHtml, uid } from "../utils.js";
 
 const ICONS = ["🍔", "🛒", "🚗", "🏠", "💡", "🛍️", "🎬", "🩺", "🎓", "🔁", "📈", "🗂️", "💰", "🎁", "✈️", "🐾"];
-const COLORS = ["#0F6B5C", "#C7401E", "#9A6B00", "#5B6EE1", "#3FA7A0", "#B23A6B", "#6D8C1F", "#8C5E2A", "#535D61"];
+const COLORS = ["#93032E", "#96721D", "#1F6B4B", "#6B4A7A", "#3A5A78", "#B3123F", "#7A5C1A", "#2E7D5B", "#5C4A50"];
 
 export function renderCategories(container) {
   const { categories } = getState();

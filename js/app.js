@@ -1,4 +1,4 @@
-import { dataService, isDemoMode } from "./services/index.js";
+import { dataService } from "./services/index.js";
 import { getState, setState, subscribe } from "./store.js";
 import { loadAllUserData } from "./dataLayer.js";
 import { applyTheme, toast } from "./utils.js";
@@ -15,7 +15,6 @@ const shell = document.getElementById("shell");
 const main = document.getElementById("main");
 const nav = document.getElementById("nav");
 const bottomNav = document.getElementById("bottom-nav");
-const modePill = document.getElementById("mode-pill");
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -25,8 +24,6 @@ const ROUTES = {
   analytics: renderAnalytics,
   settings: renderSettings,
 };
-
-modePill.textContent = isDemoMode ? "Demo" : "Live";
 
 function currentRouteName() {
   const hash = location.hash.replace("#/", "");

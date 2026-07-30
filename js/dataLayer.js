@@ -1,10 +1,48 @@
 import { dataService } from "./services/index.js";
 import { getState, setState } from "./store.js";
 import { addDays, todayStr } from "./utils.js";
+import { CONFIG } from "./config.js";
+
+const DEFAULT_EXPENSE_CATEGORIES = [
+  ["Food", "🍔", "#93032E"], ["Groceries", "🛒", "#96721D"], ["Transport", "🚗", "#1F6B4B"],
+  ["Rent", "🏠", "#6B4A7A"], ["Utilities", "💡", "#3A5A78"], ["Shopping", "🛍️", "#B3123F"],
+  ["Entertainment", "🎬", "#7A5C1A"], ["Health", "🩺", "#2E7D5B"], ["Education", "🎓", "#8C5A6B"],
+  ["Subscriptions", "🔁", "#54677D"], ["Investments", "📈", "#A6683D"], ["Miscellaneous", "🗂️", "#4C6E5D"],
+];
+const DEFAULT_INCOME_CATEGORIES = [
+  ["Salary", "💰"], ["Freelance", "💼"], ["Refunds", "↩️"], ["Investments", "📈"], ["Gifts", "🎁"], ["Other", "✨"],
+];
+const DEFAULT_PAYMENT_METHODS = ["Cash", "Debit card", "Credit card", "UPI", "Bank transfer", "Wallet", "Other"];
+
+/** A brand-new PocketBase account has no categories, no payment methods, and
+ *  no settings row — nothing seeds those server-side. Without this, the "Add
+ *  transaction" modal would show empty dropdowns and the app would crash the
+ *  moment it reads `settings.currency` off a null settings object. This runs
+ *  on every login/init and only acts when something is actually missing, so
+ *  it's safe to call repeatedly and heals the account if a row ever vanishes. */
+async function ensureStarterData(userId, { categories, paymentMethods, settings }) {
+  const tasks = [];
+  if (!categories.length) {
+    DEFAULT_EXPENSE_CATEGORIES.forEach(([name, icon, color]) => tasks.push(dataService.createCategory(userId, { name, type: "expense", icon, color, archived: false })));
+    DEFAULT_INCOME_CATEGORIES.forEach(([name, icon]) => tasks.push(dataService.createCategory(userId, { name, type: "income", icon, color: "#1F6B4B", archived: false })));
+  }
+  if (!paymentMethods.length) {
+    DEFAULT_PAYMENT_METHODS.forEach((name) => tasks.push(dataService.createPaymentMethod(userId, name)));
+  }
+  if (tasks.length) await Promise.all(tasks);
+
+  if (!settings) {
+    settings = await dataService.updateSettings(userId, {
+      currency: CONFIG.DEFAULT_CURRENCY, theme: "system",
+      monthStartDay: CONFIG.DEFAULT_MONTH_START_DAY, notifyBudgetWarnings: true,
+    });
+  }
+  return { needsReload: tasks.length > 0, settings };
+}
 
 export async function loadAllUserData() {
   const userId = getState().user.id;
-  const [transactions, categories, budgets, paymentMethods, recurring, settings] = await Promise.all([
+  let [transactions, categories, budgets, paymentMethods, recurring, settings] = await Promise.all([
     dataService.getTransactions(userId),
     dataService.getCategories(userId),
     dataService.getBudgets(userId),
@@ -12,6 +50,13 @@ export async function loadAllUserData() {
     dataService.getRecurring(userId),
     dataService.getSettings(userId),
   ]);
+
+  const seedResult = await ensureStarterData(userId, { categories, paymentMethods, settings });
+  settings = seedResult.settings;
+  if (seedResult.needsReload) {
+    [categories, paymentMethods] = await Promise.all([dataService.getCategories(userId), dataService.getPaymentMethods(userId)]);
+  }
+
   setState({ transactions, categories, budgets, paymentMethods, recurring, settings });
   await processDueRecurring();
 }

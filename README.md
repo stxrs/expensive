@@ -21,7 +21,7 @@ User's browser
 
 ```
 index.html
-css/style.css              design tokens, layout, components, light/dark theme
+css/style.css              design tokens (Night + Burgundy), layout, components, light/dark theme
 js/
   config.js                 ← the ONE file to edit to point at your PocketBase
   utils.js                  money, dates/periods, calculations, DOM/toast/modal
@@ -29,35 +29,20 @@ js/
   dataLayer.js               wraps dataService + store so the UI never goes stale
   app.js                     router + shell wiring + auth bootstrap
   services/
-    local.js                 demo/local mode — localStorage, no backend needed
-    pocketbase.js             real PocketBase-backed implementation
-    index.js                  picks one of the above based on config.js
+    pocketbase.js             PocketBase-backed implementation
+    index.js                  re-exports it as `dataService`
   views/
     auth.js, dashboard.js, transactions.js, budgets.js,
     categories.js, analytics.js, settings.js
 manifest.webmanifest
 ```
 
-`services/local.js` and `services/pocketbase.js` implement the exact same
-method surface (`login`, `getTransactions`, `createTransaction`, …). Every view
-only talks to `dataService` from `services/index.js`, so switching from demo to
-production is a one-line change in `config.js` — no UI rewrites.
+Every view only talks to `dataService` from `services/index.js` — nothing else
+in the app imports `services/pocketbase.js` directly. This app requires a
+running PocketBase server to do anything; there's no offline/local fallback,
+so set up PocketBase first (next section) before opening `index.html`.
 
-## Running the demo (no backend needed)
-
-`config.js` ships with `MODE: "demo"`. Just serve the folder statically:
-
-```bash
-cd expense-tracker
-python3 -m http.server 8000
-# open http://localhost:8000
-```
-
-Demo mode persists to `localStorage` in your browser only — it's for trying
-the app out, not for real multi-device use. A yellow banner and a "Demo" pill
-in the sidebar make this clear at all times.
-
-## Going live with PocketBase
+## Setting up PocketBase
 
 1. **Install PocketBase** on your server (the spare laptop is plenty — PocketBase
    is a single ~20MB binary + SQLite):
@@ -78,7 +63,6 @@ in the sidebar make this clear at all times.
    if you can avoid it).
 4. **Edit `js/config.js`**:
    ```js
-   MODE: "pocketbase",
    POCKETBASE_URL: "https://expensive.yourdomain.com",
    ```
 5. **Deploy the frontend to GitHub Pages** — push this folder to a repo and
@@ -142,15 +126,15 @@ else's `userId`:
 This is the real security boundary — the frontend's own filtering is only for
 UX. Never rely on client-side filtering alone.
 
-## Receipts: demo vs. production
+## Receipts
 
-In demo mode, receipt images are kept as base64 data URLs in `localStorage`
-(fine for trying things out, not for large volumes of images). In production
-(`pocketbase` mode), `services/pocketbase.js` sends the transaction as
-`multipart/form-data` so a real `File` upload works with the `receiptFile`
-field — if you wire the file picker's `File` object through instead of a data
-URL (a small change in `views/transactions.js`'s submit handler), receipts will
-upload to and serve from your own PocketBase storage.
+`views/transactions.js` keeps the real picked `File` object and only sends it
+to `services/pocketbase.js` when it actually changes: a new file is uploaded
+as `multipart/form-data` into the `receiptFile` field, removing an existing
+receipt sends an explicit empty value to clear it, and leaving it untouched
+sends nothing for that field at all. Editing a transaction previews the
+receipt straight from your PocketBase file storage (`receiptUrl`, derived via
+`pb.files.getUrl()`), not from a local copy.
 
 ## What's intentionally out of scope for a static frontend
 
@@ -170,6 +154,12 @@ These require server-side infrastructure and are documented rather than faked:
 
 ## Notable design decisions
 
+- **Palette**: Night (`#151515`) and Burgundy (`#93032E`) are the two brand
+  colors, defined once as CSS custom properties in `css/style.css` (`--bg`,
+  `--brand`, …) and re-read at runtime by the chart code in `views/dashboard.js`
+  and `views/analytics.js` — change a value in one place and both the UI and
+  the charts follow. A muted gold (`--gold`) is used sparingly for "approaching
+  budget limit" states, and a deep emerald (`--positive`) for income.
 - **Money** is stored as integer minor units (paise/cents) everywhere, never
   floats, to avoid rounding bugs. `js/utils.js` is the only place that converts
   to/from display values.

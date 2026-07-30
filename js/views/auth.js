@@ -1,4 +1,4 @@
-import { dataService, isDemoMode } from "../services/index.js";
+import { dataService } from "../services/index.js";
 import { toast } from "../utils.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -9,7 +9,6 @@ export function renderAuth(root, { onAuthed }) {
   function draw() {
     root.innerHTML = `
       <div class="auth-card fade-in">
-        ${isDemoMode ? `<div class="demo-banner">Demo mode — data lives only in this browser. Point <code>js/config.js</code> at your PocketBase server for real, multi-device sync.</div>` : ""}
         <h1>${mode === "login" ? "Welcome back" : mode === "register" ? "Create your account" : "Reset your password"}</h1>
         <p class="auth-sub">${mode === "login" ? "Log in to your private ledger." : mode === "register" ? "Your data stays on your own server." : "We'll send a reset link to your email."}</p>
         <form id="auth-form" novalidate>
@@ -33,11 +32,7 @@ export function renderAuth(root, { onAuthed }) {
             <input id="f-confirm" type="password" autocomplete="new-password" required>
             <div class="field-error" id="err-confirm"></div>
           </div>` : ""}
-          ${mode === "login" ? `
-          <div class="field" style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
-            <input type="checkbox" id="f-remember" style="width:auto;" checked>
-            <label for="f-remember" style="margin:0;">Stay signed in on this device</label>
-          </div>` : ""}
+          ${mode === "login" ? `<p class="auth-note">You'll stay signed in on this device until you log out.</p>` : ""}
           <button class="btn btn-primary btn-block" type="submit" id="auth-submit">
             ${mode === "login" ? "Log in" : mode === "register" ? "Create account" : "Send reset link"}
           </button>
@@ -74,7 +69,7 @@ export function renderAuth(root, { onAuthed }) {
         setLoading(true);
         try {
           await dataService.requestPasswordReset(email);
-          toast(isDemoMode ? "Demo mode has no email server — in production this sends a real reset link." : "Reset link sent — check your inbox.", "success");
+          toast("Reset link sent — check your inbox.", "success");
           mode = "login"; draw();
         } catch (err) { toast(err.message, "error"); }
         finally { setLoading(false); }

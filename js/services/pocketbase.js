@@ -46,7 +46,12 @@ export const pocketbaseService = {
   mode: "pocketbase",
 
   async init() {
-    getPB().authStore.loadFromCookie(document.cookie || "");
+    // PocketBase's default authStore already restores the session from
+    // localStorage automatically when the client is constructed — no extra
+    // call needed. (A prior version of this file called `loadFromCookie`
+    // here, but nothing in this app ever writes a pb_auth cookie, so that
+    // call was a no-op at best and risked clobbering the auto-restored
+    // session at worst. Removed.)
     if (!getPB().authStore.isValid) return null;
     try {
       await withErrors(getPB().collection("users").authRefresh());
@@ -72,7 +77,7 @@ export const pocketbaseService = {
 
   async requestPasswordReset(email) {
     await withErrors(getPB().collection("users").requestPasswordReset(email));
-    return { sent: true, demo: false };
+    return { sent: true };
   },
 
   async logout() { getPB().authStore.clear(); },

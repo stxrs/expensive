@@ -11,7 +11,9 @@ export function openTransactionModal(existing = null, opts = {}) {
   const { categories, paymentMethods, settings, user } = getState();
   let type = existing?.type || opts.type || "expense";
   let tags = existing?.tags ? [...existing.tags] : [];
-  let receiptDataUrl = existing?.receiptDataUrl || null;
+  // receiptFile: undefined = leave unchanged, a File = new upload, "" = explicit removal.
+  let receiptFile;
+  let receiptPreviewUrl = existing?.receiptUrl || null;
 
   const catOptions = () => categories.filter((c) => c.type === type && !c.archived)
     .map((c) => `<option value="${escapeHtml(c.name)}" ${existing?.category === c.name ? "selected" : ""}>${c.icon} ${escapeHtml(c.name)}</option>`).join("");
@@ -66,8 +68,8 @@ export function openTransactionModal(existing = null, opts = {}) {
         <div class="field">
           <label for="tx-receipt">Receipt / invoice image</label>
           <input id="tx-receipt" type="file" accept="image/*">
-          <img id="receipt-preview" class="receipt-preview ${receiptDataUrl ? "" : "hidden"}" src="${receiptDataUrl || ""}">
-          <button type="button" class="btn btn-sm btn-ghost ${receiptDataUrl ? "" : "hidden"}" id="remove-receipt" style="margin-top:6px;">Remove image</button>
+          <img id="receipt-preview" class="receipt-preview ${receiptPreviewUrl ? "" : "hidden"}" src="${receiptPreviewUrl || ""}">
+          <button type="button" class="btn btn-sm btn-ghost ${receiptPreviewUrl ? "" : "hidden"}" id="remove-receipt" style="margin-top:6px;">Remove image</button>
         </div>
       </form>
     `,
@@ -83,19 +85,18 @@ export function openTransactionModal(existing = null, opts = {}) {
       m.querySelector("#tx-receipt").addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (!file.type.startsWith("image/")) { toast("Please choose an image file.", "error"); return; }
-        if (file.size > 4 * 1024 * 1024) { toast("Image must be under 4MB.", "error"); return; }
-        const reader = new FileReader();
-        reader.onload = () => {
-          receiptDataUrl = reader.result;
-          const img = m.querySelector("#receipt-preview");
-          img.src = receiptDataUrl; img.classList.remove("hidden");
-          m.querySelector("#remove-receipt").classList.remove("hidden");
-        };
-        reader.readAsDataURL(file);
+        if (!file.type.startsWith("image/")) { toast("Please choose an image file.", "error"); e.target.value = ""; return; }
+        if (file.size > 4 * 1024 * 1024) { toast("Image must be under 4MB.", "error"); e.target.value = ""; return; }
+        receiptFile = file;
+        const img = m.querySelector("#receipt-preview");
+        img.src = URL.createObjectURL(file);
+        img.classList.remove("hidden");
+        m.querySelector("#remove-receipt").classList.remove("hidden");
       });
       m.querySelector("#remove-receipt").addEventListener("click", () => {
-        receiptDataUrl = null;
+        // "" tells the backend to clear a previously-uploaded file; undefined (the
+        // initial state) would mean "leave whatever's there alone", which is wrong here.
+        receiptFile = "";
         m.querySelector("#tx-receipt").value = "";
         m.querySelector("#receipt-preview").classList.add("hidden");
         m.querySelector("#remove-receipt").classList.add("hidden");
@@ -124,7 +125,10 @@ export function openTransactionModal(existing = null, opts = {}) {
           paymentMethod: m.querySelector("#tx-method").value,
           notes: m.querySelector("#tx-notes").value.trim(),
           tags: tagList,
-          receiptDataUrl,
+          // Only include receiptFile at all if it actually changed — omitting the
+          // key (rather than sending undefined/null) is what tells services/pocketbase.js
+          // to leave the existing uploaded file untouched.
+          ...(receiptFile !== undefined ? { receiptFile } : {}),
         };
 
         const saveBtn = m.querySelector("#tx-save");
@@ -157,8 +161,8 @@ export async function deleteTransactionFlow(tx) {
 
 export async function duplicateTransactionFlow(tx) {
   try {
-    const { id, createdAt, updatedAt, ...rest } = tx;
-    await dataService.createTransaction(getState().user.id, { ...rest, date: todayStr() });
+    const { id, createdAt, updatedAt, receiptFile, receiptUrl, ...rest } = tx;
+    await dataService.createTransaction(getState().user.id, { ...rest, date: todayStr(), time: nowTimeStr() });
     await Promise.all([reloadTransactions(), reloadBudgets()]);
     toast("Transaction duplicated.", "success");
   } catch (err) { toast(err.message, "error"); }
@@ -285,7 +289,7 @@ function renderList(container) {
     const cat = catMap.get(t.category);
     return `
     <div class="ledger-row" data-id="${t.id}" tabindex="0" role="button" aria-label="Edit ${escapeHtml(t.description)}">
-      <div class="ledger-icon" style="background:${cat?.color || "#DEDCD3"}22;color:${cat?.color || "#535D61"};">${cat?.icon || "•"}</div>
+      <div class="ledger-icon" style="background:${cat?.color ? cat.color + "22" : "var(--bg-sunken)"};color:${cat?.color || "var(--ink-soft)"};">${cat?.icon || "•"}</div>
       <div class="ledger-main">
         <div class="ledger-desc">${escapeHtml(t.description)}</div>
         <div class="ledger-meta">${formatDateShort(t.date)} · ${escapeHtml(t.category)} · ${escapeHtml(t.paymentMethod || "")}</div>
@@ -321,7 +325,7 @@ function openTransactionRowActions(tx, container) {
       <p>${escapeHtml(tx.description)}</p>
       ${tx.notes ? `<p class="muted small">${escapeHtml(tx.notes)}</p>` : ""}
       ${(tx.tags || []).length ? `<div class="ledger-tags" style="margin:8px 0;">${tx.tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
-      ${tx.receiptDataUrl ? `<img class="receipt-preview" src="${tx.receiptDataUrl}">` : ""}
+      ${tx.receiptUrl ? `<img class="receipt-preview" src="${tx.receiptUrl}">` : ""}
     `,
     footHtml: `<button class="btn btn-ghost" id="act-dup">Duplicate</button>
                <button class="btn btn-danger" id="act-del">Delete</button>

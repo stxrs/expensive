@@ -14,13 +14,13 @@ function chartColors(theme) {
   return {
     grid: styles.getPropertyValue("--line").trim(),
     text: styles.getPropertyValue("--ink-soft").trim(),
-    teal: styles.getPropertyValue("--teal").trim(),
-    coral: styles.getPropertyValue("--coral").trim(),
-    amber: styles.getPropertyValue("--amber").trim(),
+    brand: styles.getPropertyValue("--brand").trim(),
+    positive: styles.getPropertyValue("--positive").trim(),
+    gold: styles.getPropertyValue("--gold").trim(),
   };
 }
 
-const CAT_PALETTE = ["#0F6B5C", "#C7401E", "#9A6B00", "#5B6EE1", "#3FA7A0", "#B23A6B", "#6D8C1F", "#8C5E2A", "#535D61", "#2E8B8B", "#A85D3D", "#4C6E5D"];
+const CAT_PALETTE = ["#93032E", "#96721D", "#1F6B4B", "#6B4A7A", "#3A5A78", "#B3123F", "#7A5C1A", "#2E7D5B", "#8C5A6B", "#54677D", "#A6683D", "#4C6E5D"];
 const chartsReady = () => typeof Chart !== "undefined";
 
 export function renderDashboard(container) {
@@ -126,8 +126,8 @@ export function renderDashboard(container) {
     charts.ie = new Chart(ctx, {
       type: "bar",
       data: { labels: ["This period"], datasets: [
-        { label: "Income", data: [income / 100], backgroundColor: colors.teal, borderRadius: 6 },
-        { label: "Expenses", data: [expense / 100], backgroundColor: colors.coral, borderRadius: 6 },
+        { label: "Income", data: [income / 100], backgroundColor: colors.positive, borderRadius: 6 },
+        { label: "Expenses", data: [expense / 100], backgroundColor: colors.brand, borderRadius: 6 },
       ] },
       options: { maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: colors.grid }, ticks: { color: colors.text } } },
         plugins: { legend: { labels: { color: colors.text } } } },
@@ -143,7 +143,7 @@ export function renderDashboard(container) {
     const ctx = container.querySelector("#trend-chart");
     charts.trend = new Chart(ctx, {
       type: "line",
-      data: { labels: days.map((d) => d.slice(5)), datasets: [{ label: "Daily spend", data: byDay, borderColor: colors.coral, backgroundColor: colors.coral + "22", fill: true, tension: 0.35, pointRadius: 0 }] },
+      data: { labels: days.map((d) => d.slice(5)), datasets: [{ label: "Daily spend", data: byDay, borderColor: colors.brand, backgroundColor: colors.brand + "22", fill: true, tension: 0.35, pointRadius: 0 }] },
       options: { maintainAspectRatio: false, plugins: { legend: { display: false } },
         scales: { x: { grid: { display: false }, ticks: { color: colors.text, maxTicksLimit: 8 } }, y: { grid: { color: colors.grid }, ticks: { color: colors.text } } } },
     });
@@ -182,7 +182,7 @@ function recentTransactionsHtml(transactions, settings) {
   }
   return recent.map((t) => `
     <div class="ledger-row">
-      <div class="ledger-icon" style="background:var(--teal-soft);color:var(--teal);">${t.type === "expense" ? "−" : "+"}</div>
+      <div class="ledger-icon" style="background:${t.type === "expense" ? "var(--brand-soft)" : "var(--positive-soft)"};color:${t.type === "expense" ? "var(--brand)" : "var(--positive)"};">${t.type === "expense" ? "−" : "+"}</div>
       <div class="ledger-main">
         <div class="ledger-desc">${escapeHtml(t.description)}</div>
         <div class="ledger-meta">${formatDateShort(t.date)} · ${escapeHtml(t.category)}</div>
