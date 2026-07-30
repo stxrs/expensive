@@ -6,6 +6,10 @@ export const CONFIG = {
   // Example: "https://expensive.mydomain.com"  (must be HTTPS in production)
   POCKETBASE_URL: "http://127.0.0.1:8090",
 
+  // When developing locally without a PocketBase server, set this to true
+  // to use the built-in `localService` (persists to localStorage).
+  USE_LOCAL: true,
+
   APP_NAME: "Expensive",
 
   DEFAULT_CURRENCY: "INR",
